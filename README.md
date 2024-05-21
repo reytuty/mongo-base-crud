@@ -11,61 +11,28 @@ npm i mongo-base-crud
 ## Usage
 
 ```
-import { Singleton } from "mongo-base-crud";
+import { Singleton } from "typescript-singleton";
+import BaseCrud from "mongo-base-crud";
 
-Singleton.getInstance<MyClassThatIWannaToBeUnique>(
-'here-my-unique-key',
-MyClassThatIWannaToBeUnique,
-//put your parameters here if you want
-);
-
-```
-
-```
-
-import { Singleton } from "mongo-base-crud";
-
-class MyClassThatIWannaToBeUnique {
-public name: string;
-public total: number;
-constructor(name: string, total: number) {
-this.name = name;
-this.total = total;
-}
+export class MyClassExample extends BaseCrud<{id:string, name:string}> {
+  public static instance(): MyClassExample {
+    return Singleton.getInstance<MyClassExample>(`MyClassExample`, MyClassExample);
+  }
+  constructor() {
+    super("my_collection", "my_database", { clinicAlias: true, unitAlias: true });
+  }
 }
 
-//If your class use json to config or other parameters, stringfy all of them and use as a key, like this example
 
-const myClassConfig: any = {
-user:"root",
-pass:"abc",
-port: 11027
+MyClassExample.instance().find().then(result=>{console.log(result)});
+
+```
+
+```
+function getCrud(){
+  const genericCrud:BaseCrud<MyDTO> = BaseCrud<MyDTO>.getInstance("collectionName", "dbName", { type: 1 });
+  return genericCrud;
 }
-
-//in this case if some other equal config was used to instance the same class, that will be the same instance class
-
-const privateKey: string = JSON.stringfy(myClassConfig);
-const total = 10;
-const myClassInstance1: MyClassThatIWannaToBeUnique =
-Singleton.getInstance<MyClassThatIWannaToBeUnique>(
-privateKey,
-MyClassThatIWannaToBeUnique,
-"test",
-total
-);
-const myClassInstance2: MyClassThatIWannaToBeUnique =
-Singleton.getInstance<MyClassThatIWannaToBeUnique>(
-privateKey,
-MyClassThatIWannaToBeUnique,
-"test",
-total
-);
-//to prove that be the same instance, I will change a name of instance 1
-myClassInstance1.name = "There is no test anymore";
-console.log(myClassInstance1.name === myClassInstance2.name, "same name and same memory location");
-
-```
-
-```
+getCrud().find().then(console.log)
 
 ```
