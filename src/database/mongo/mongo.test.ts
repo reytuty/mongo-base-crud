@@ -28,18 +28,29 @@ async function wait(time: number) {
     setTimeout(resolve, time * 1000);
   });
 }
-
+const config = {
+  prefixName: "test_",
+  fullUrl: "mongodb://localhost:27017",
+  database: "test",
+};
+const dbAccess = MongoDbAccess.getInstance(
+  "test_a",
+  "test",
+  undefined,
+  9,
+  config
+);
 describe("Mongo", () => {
   it("should add item without pass id and need to create one", async () => {
     const x = createRandomData("x");
-    const instance = await MongoDbAccess.getInstance("test_a");
+    const instance = await dbAccess;
     const insertResultX = await instance.insert({ name: x.name });
     expect(insertResultX.id).not.toBe(null);
   }, 5000);
   it("should add itens on first collection", async () => {
     const a = createRandomData("a");
     const b = createRandomData("b");
-    const instance = await MongoDbAccess.getInstance("test_a");
+    const instance = await dbAccess;
     const insertResultA = await instance.insert(a);
     expect(insertResultA.id).toBe(a.id);
     const insertResultB = await instance.insert(b);
@@ -47,13 +58,13 @@ describe("Mongo", () => {
   }, 5000);
   it("should find by id", async () => {
     const b = createRandomData("b");
-    const instance = await MongoDbAccess.getInstance("test_a");
+    const instance = await dbAccess;
     const bById = await instance.getById<DataExample>(b.id);
     expect(bById?.id).toBe(b.id);
-  }, 50000);
+  }, 5000);
   it("should find saved itens", async () => {
     const a = createRandomData("a");
-    const instance = await MongoDbAccess.getInstance("test_a");
+    const instance = await dbAccess;
     const findResult = await instance.find<DataExample>({
       filter: {
         id: a.id,
@@ -65,14 +76,14 @@ describe("Mongo", () => {
   });
   it("should find itens without filter", async () => {
     const a = createRandomData("a");
-    const instance = await MongoDbAccess.getInstance("test_a");
+    const instance = await dbAccess;
     const findResult = await instance.find<DataExample>({});
     expect(findResult.total).toBeGreaterThan(1);
   });
   it("should update Data using same id", async () => {
     const a = createRandomData("a");
     a.name = "Name changed";
-    const instance = await MongoDbAccess.getInstance("test_a");
+    const instance = await dbAccess;
     const insertResult = await instance.insert(a);
     const aById = await instance.getById<DataExample>(a.id);
     expect(aById?.name).toBe(a.name);

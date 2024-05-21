@@ -11,7 +11,7 @@ import {
   FilterNoOffset,
 } from "../IDatabase";
 
-import { stringToRegex } from "./prepare.js";
+import { stringToRegex } from "./prepare";
 import * as md5 from "md5";
 
 const mongoConnections = new Map<string, Connection>();
@@ -35,7 +35,7 @@ async function getMongoConnection(
   const prefixName: string = config?.prefixName || "";
   const dbName: string =
     prefixName + (customDbName || prefixName + configOrDefault?.database);
-  const connectionString = md5(configOrDefault.fullUrl);
+  const connectionString = md5(configOrDefault.fullUrl) + "_" + customDbName;
 
   if (!mongoConnections.has(connectionString)) {
     const connection = await mongoose.createConnection(connectionString, {
@@ -101,7 +101,7 @@ export class MongoDbAccess implements IDatabase {
     try {
       const connectedMongoose: Connection | undefined =
         await getMongoConnection(configOrDefault, databaseName);
-      const keyCollection: string = `${dbName}.${collectionName}`;
+      const keyCollection: string = `${connectionString}.${dbName}.${collectionName}`;
       if (!MongoDbAccess.models.has(keyCollection)) {
         connectedMongoose.model(
           collectionName,
