@@ -1,0 +1,48 @@
+{
+  "name": "mongo-base-crud",
+  "version": "0.1.0",
+  "description": "Class to handler access and handler database",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reytuty/mongo-base-crud.git"
+  },
+  "scripts": {
+    "prepublish": "rm -rf dist/ && npm run build",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": [
+    "mongo",
+    "crud",
+    "simple",
+    "typescript",
+    "auto-create"
+  ],
+  "author": "Renato Miawaki",
+  "license": "Apache-2.0",
+  "main": "dist/src/index.js",
+  "module": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "devDependencies": {
+    "@babel/preset-env": "^7.21.5",
+    "@babel/preset-typescript": "^7.21.5",
+    "@jest/globals": "^29.7.0",
+    "@types/node": "^20.2.5",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "tsc": "^2.0.4",
+    "typescript": "^5.0.4",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@types/jest": "^29.5.1",
+    "@types/md5": "^2.3.5",
+    "crypto": "^1.0.1",
+    "md5": "^2.3.0",
+    "mongoose": "^8.4.0",
+    "typescript": "^5.0.4",
+    "typescript-singleton": "^0.1.3"
+  }
+}
