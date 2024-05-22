@@ -1,4 +1,4 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect } from "vitest";
 
 import { randomUUID } from "crypto";
 import { faker } from "@faker-js/faker";
@@ -16,7 +16,7 @@ function createRandomData(key: string): DataExample {
   if (!createdData.has(key)) {
     createdData.set(key, {
       id: randomUUID(),
-      name: faker.name.firstName(),
+      name: faker.person.firstName(),
       age: Math.round(Math.random() * 45),
     });
   }
@@ -30,7 +30,7 @@ async function wait(time: number) {
 }
 const config = {
   prefixName: "test_",
-  fullUrl: "mongodb://localhost:27017",
+  fullUrl: "mongodb://admin:admin@localhost:27017",
   database: "test",
 };
 const dbAccess = MongoDbAccess.getInstance(

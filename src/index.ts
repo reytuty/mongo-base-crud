@@ -1,8 +1,7 @@
 import { Singleton } from "typescript-singleton";
 import { DocumentWithId, IDatabase, List } from "./database/IDatabase";
-import { MongoDbAccess } from "./database/mongo";
-
-export default class BaseCrud<T> {
+import { MongoDbAccess } from "./database/mongo/index.js";
+class BaseCrud<T> {
   protected dbInterface: Promise<IDatabase>;
   public static getInstance<T>(
     collectionName?: string,
@@ -110,3 +109,5 @@ export default class BaseCrud<T> {
     return (await this.dbInterface).delete(id);
   }
 }
+
+export { BaseCrud, DocumentWithId, IDatabase, List };

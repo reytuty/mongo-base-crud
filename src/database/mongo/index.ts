@@ -12,7 +12,7 @@ import {
 } from "../IDatabase";
 
 import { stringToRegex } from "./prepare";
-import * as md5 from "md5";
+import md5 from "md5";
 
 const mongoConnections = new Map<string, Connection>();
 export type MongoConfig = {
@@ -23,7 +23,7 @@ export type MongoConfig = {
 function getDefaultMongoConfig(): MongoConfig {
   return {
     prefixName: process.env.MONGO_PREFIX_NAME || "dev_",
-    fullUrl: process.env.MONGO_URL || "mongodb://localhost:27017",
+    fullUrl: process.env.MONGO_URL || "mongodb://admin:admin@localhost:27017",
     database: process.env.MONGO_DB || "db",
   };
 }
@@ -38,9 +38,12 @@ async function getMongoConnection(
   const connectionString = md5(configOrDefault.fullUrl) + "_" + customDbName;
 
   if (!mongoConnections.has(connectionString)) {
-    const connection = await mongoose.createConnection(connectionString, {
-      dbName,
-    });
+    const connection = await mongoose.createConnection(
+      configOrDefault.fullUrl,
+      {
+        dbName,
+      }
+    );
     mongoConnections.set(connectionString, connection);
   }
   return mongoConnections.get(connectionString) as Connection;
@@ -301,7 +304,7 @@ export class MongoDbAccess implements IDatabase {
       { _id: id },
       data,
       {
-        upsert: false,
+        upsert: true,
         new: true,
       }
     );

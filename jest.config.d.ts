@@ -3,5 +3,7 @@ declare const _default: {
     coveragePathIgnorePatterns: string[];
     coverageProvider: string;
     testMatch: string[];
+    preset: string;
+    testEnvironment: string;
 };
 export default _default;
