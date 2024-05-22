@@ -23,7 +23,7 @@ export type MongoConfig = {
 function getDefaultMongoConfig(): MongoConfig {
   return {
     prefixName: process.env.MONGO_PREFIX_NAME || "dev_",
-    fullUrl: process.env.MONGO_URL || "mongodb://admin:admin@localhost:27017",
+    fullUrl: process.env.MONGO_URL || "mongodb://localhost:27017",
     database: process.env.MONGO_DB || "db",
   };
 }
