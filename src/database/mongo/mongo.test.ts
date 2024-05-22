@@ -37,8 +37,8 @@ const dbAccess = MongoDbAccess.getInstance(
   "test_a",
   "test",
   undefined,
-  9,
-  config
+  9
+  // config
 );
 describe("Mongo", () => {
   it("should add item without pass id and need to create one", async () => {

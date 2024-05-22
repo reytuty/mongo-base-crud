@@ -13,6 +13,8 @@ import {
 
 import { stringToRegex } from "./prepare";
 import md5 from "md5";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const mongoConnections = new Map<string, Connection>();
 export type MongoConfig = {
