@@ -1,6 +1,6 @@
 {
   "name": "mongo-base-crud",
-  "version": "0.1.4",
+  "version": "0.1.7",
   "description": "Class to handler access and handler database",
   "repository": {
     "type": "git",
@@ -20,9 +20,9 @@
   ],
   "author": "Renato Miawaki",
   "license": "Apache-2.0",
-  "main": "dist/src/index.js",
-  "module": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
