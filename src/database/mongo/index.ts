@@ -14,6 +14,7 @@ import {
 import { stringToRegex } from "./prepare";
 import md5 from "md5";
 import * as dotenv from "dotenv";
+import { randomUUID } from "crypto";
 dotenv.config();
 
 const mongoConnections = new Map<string, Connection>();
@@ -292,7 +293,7 @@ export class MongoDbAccess implements IDatabase {
 
     const document = await this.model.create({
       ...data,
-      _id: crypto.randomUUID(),
+      _id: randomUUID(),
     });
     return { id: document?._id.toString() };
   }
