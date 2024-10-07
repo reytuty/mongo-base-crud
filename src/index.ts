@@ -6,14 +6,18 @@ class BaseCrud<T> {
   public static getInstance<T>(
     collectionName?: string,
     dbName?: string,
-    indexes: any = {}
+    indexes: any = {},
+    connectionTryingTimes = 1,
+    defaultConfig?: MongoConfig
   ): BaseCrud<T> {
     return Singleton.getInstance<BaseCrud<T>>(
       `${dbName}_${collectionName}`,
       BaseCrud,
       collectionName,
       dbName,
-      indexes
+      indexes,
+      connectionTryingTimes,
+      defaultConfig
     );
   }
 
