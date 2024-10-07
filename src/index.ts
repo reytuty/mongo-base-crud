@@ -1,6 +1,6 @@
 import { Singleton } from "typescript-singleton";
 import { DocumentWithId, IDatabase, List } from "./database/IDatabase";
-import { MongoDbAccess } from "./database/mongo/index.js";
+import { MongoConfig, MongoDbAccess } from "./database/mongo/index.js";
 class BaseCrud<T> {
   protected dbInterface: Promise<IDatabase>;
   public static getInstance<T>(
@@ -20,7 +20,9 @@ class BaseCrud<T> {
   constructor(
     protected collectionName: string,
     protected dbName: string,
-    indexes: any = {}
+    indexes: any = {},
+    connectionTryingTimes = 1,
+    defaultConfig?: MongoConfig
   ) {
     if (!this.collectionName) {
       throw new Error("Collection name is required");
@@ -31,7 +33,9 @@ class BaseCrud<T> {
     this.dbInterface = MongoDbAccess.getInstance(
       this.collectionName,
       this.dbName,
-      indexes
+      indexes,
+      connectionTryingTimes,
+      defaultConfig
     );
   }
 
