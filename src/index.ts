@@ -1,7 +1,12 @@
 import { Singleton } from "typescript-singleton";
-import { DocumentWithId, IDatabase, List } from "./database/IDatabase";
+import {
+  DocumentWithId,
+  IBaseCrud,
+  IDatabase,
+  List,
+} from "./database/IDatabase";
 import { MongoConfig, MongoDbAccess } from "./database/mongo/index.js";
-class BaseCrud<T> {
+class BaseCrud<T> implements IBaseCrud<T> {
   protected dbInterface: Promise<IDatabase>;
   public static getInstance<T>(
     collectionName?: string,
