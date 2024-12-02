@@ -1,3 +1,12 @@
+export interface IBaseCrud<T> {
+  getById(id: string): Promise<T | null>;
+  find(FilterOffset: Filter): Promise<List<T>>;
+  findAll(FilterOffset: Filter): Promise<T[]>;
+  save(data: any): Promise<DocumentWithId>;
+  update(data: { [key: string]: any; id: string }): Promise<DocumentWithId>;
+  delete(id: string): Promise<any>;
+}
+
 export interface IDatabase {
   collection: string;
   getById<T>(id: string): Promise<T | null>;
