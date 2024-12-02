@@ -15,7 +15,7 @@ import { stringToRegex } from "./prepare";
 import md5 from "md5";
 import * as dotenv from "dotenv";
 import { randomUUID } from "crypto";
-import { transformDataToUpdate } from "src/utils/transformData";
+import { transformDataToUpdate } from "../../utils/transformData";
 dotenv.config();
 
 const mongoConnections = new Map<string, Connection>();
