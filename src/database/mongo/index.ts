@@ -15,6 +15,7 @@ import { stringToRegex } from "./prepare";
 import md5 from "md5";
 import * as dotenv from "dotenv";
 import { randomUUID } from "crypto";
+import { transformDataToUpdate } from "src/utils/transformData";
 dotenv.config();
 
 const mongoConnections = new Map<string, Connection>();
@@ -302,7 +303,7 @@ export class MongoDbAccess implements IDatabase {
     [key: string]: any;
     id: string;
   }): Promise<DocumentWithId> {
-    const { id, ...updateData } = data;
+    const { id } = data;
     const updatedDocument = await this.model.findOneAndUpdate(
       { _id: id },
       data,
@@ -312,6 +313,13 @@ export class MongoDbAccess implements IDatabase {
       }
     );
     return { id: updatedDocument?.id.toString() };
+  }
+
+  async partialUpdate(
+    id: string,
+    updates: Partial<{ [key: string]: any }>
+  ): Promise<DocumentWithId> {
+    return this.update({ id, ...transformDataToUpdate(updates) });
   }
 
   async delete(id: string): Promise<any> {
