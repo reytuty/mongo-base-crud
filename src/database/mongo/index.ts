@@ -15,6 +15,7 @@ import { stringToRegex } from "./prepare";
 import md5 from "md5";
 import * as dotenv from "dotenv";
 import { randomUUID } from "crypto";
+import { transformDataToUpdate } from "src/utils/transformData";
 dotenv.config();
 
 const mongoConnections = new Map<string, Connection>();
@@ -302,7 +303,7 @@ export class MongoDbAccess implements IDatabase {
     [key: string]: any;
     id: string;
   }): Promise<DocumentWithId> {
-    const { id, ...updateData } = data;
+    const { id } = data;
     const updatedDocument = await this.model.findOneAndUpdate(
       { _id: id },
       data,
@@ -314,27 +315,11 @@ export class MongoDbAccess implements IDatabase {
     return { id: updatedDocument?.id.toString() };
   }
 
-  async patch(
+  async partialUpdate(
     id: string,
     updates: Partial<{ [key: string]: any }>
   ): Promise<DocumentWithId> {
-    if (Object.keys(updates).length === 0) {
-      throw new Error("No fields provided for patch update.");
-    }
-  
-    const updatedDocument = await this.model.findOneAndUpdate(
-      { _id: id },
-      { $set: updates },
-      {
-        new: true,
-      }
-    );
-  
-    if (!updatedDocument) {
-      throw new Error(`Document with id ${id} not found.`);
-    }
-  
-    return { id: updatedDocument.id.toString() };
+    return this.update({ id, ...transformDataToUpdate(updates) });
   }
 
   async delete(id: string): Promise<any> {

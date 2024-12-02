@@ -88,4 +88,19 @@ describe("Mongo", () => {
     const aById = await instance.getById<DataExample>(a.id);
     expect(aById?.name).toBe(a.name);
   });
+  it("should update partial data using same id", async () => {
+    const a = { 
+      details: {
+        name: "Name",
+        age: 18
+      }
+    }
+    const instance = await dbAccess;
+    const {id} =  await instance.insert(a);
+    const newAge = 19;
+    await instance.partialUpdate(id, { details: { age: newAge } });
+    const aById = await instance.getById<any>(id);
+    expect(aById?.details?.name).toBe(a.details.name);
+    expect(aById?.details?.age).toBe(newAge);
+  });
 });

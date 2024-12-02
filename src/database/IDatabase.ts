@@ -5,7 +5,7 @@ export interface IDatabase {
   findAll<T>(FilterOffset: Filter): Promise<T[]>;
   insert(data: { [key: string]: any; id?: string }): Promise<DocumentWithId>;
   update(data: { [key: string]: any; id: string }): Promise<DocumentWithId>;
-  patch(
+  partialUpdate(
     id: string,
     updates: Partial<{ [key: string]: any }>
   ): Promise<DocumentWithId>;

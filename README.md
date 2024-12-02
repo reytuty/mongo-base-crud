@@ -167,3 +167,91 @@ export async function serviceTofind(active:boolean, category:string, freeQuery?:
   return resultData;
 }
 ```
+## Update
+
+```
+ * Updates an existing document in the database.
+ * 
+ * @param data - An object containing the fields to update and the document's ID.
+ *               The object must include an `id` property with the document's ID.
+ *               If the object contains an `updatedAt` property, it will be set to the current date.
+ * 
+ * @returns A promise that resolves to the updated document with its ID.
+ * 
+ * @throws Will throw an error if the update operation fails.
+
+async update(data: { [key: string]: any; id: string }): Promise<DocumentWithId> {
+  if (data.hasOwnProperty("updatedAt")) {
+    data.updatedAt = new Date();
+  }
+  const result = await (await this.dbInterface).update(data);
+  return result;
+}
+```
+
+### Example to update an object
+
+```
+// Example to update an object
+
+const updatedObj = { id: "1", name: "Jane Doe", updatedAt: new Date() };
+MyClassExample.instance().update(updatedObj).then(result => {
+  console.log("Object updated:", result);
+}).catch(error => {
+  console.error("Error updating object:", error);
+});
+
+// Example to update an object without updatedAt field
+
+const updatedObjWithoutDate = { id: "2", name: "John Smith" };
+MyClassExample.instance().update(updatedObjWithoutDate).then(result => {
+  console.log("Object updated:", result);
+}).catch(error => {
+  console.error("Error updating object:", error);
+});
+```
+
+
+## Partial update 
+```typescript
+/**
+ * Partially updates an existing document in the database.
+ * 
+ * @param id - The ID of the document to update.
+ * @param data - An object containing the fields to update.
+ *               If the object contains an `updatedAt` property, it will be set to the current date.
+ * 
+ * @returns A promise that resolves to the updated document with its ID.
+ * 
+ * @throws Will throw an error if the update operation fails.
+ */
+async partialUpdate(id: string, data: { [key: string]: any }): Promise<DocumentWithId> {
+  if (data.hasOwnProperty("updatedAt")) {
+    data.updatedAt = new Date();
+  }
+  const result = await (await this.dbInterface).partialUpdate(id, data);
+  return result;
+}
+```
+
+### Example to partially update an object
+
+```typescript
+// Example to partially update an object
+
+const partialUpdateData = { name: "Jane Doe" };
+MyClassExample.instance().partialUpdate("1", partialUpdateData).then(result => {
+  console.log("Object partially updated:", result);
+}).catch(error => {
+  console.error("Error partially updating object:", error);
+});
+
+// Example to partially update an object with updatedAt field
+
+const partialUpdateDataWithDate = { name: "John Smith", updatedAt: new Date() };
+MyClassExample.instance().partialUpdate("2", partialUpdateDataWithDate).then(result => {
+  console.log("Object partially updated:", result);
+}).catch(error => {
+  console.error("Error partially updating object:", error);
+});
+```
