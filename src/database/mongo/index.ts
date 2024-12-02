@@ -314,6 +314,29 @@ export class MongoDbAccess implements IDatabase {
     return { id: updatedDocument?.id.toString() };
   }
 
+  async patch(
+    id: string,
+    updates: Partial<{ [key: string]: any }>
+  ): Promise<DocumentWithId> {
+    if (Object.keys(updates).length === 0) {
+      throw new Error("No fields provided for patch update.");
+    }
+  
+    const updatedDocument = await this.model.findOneAndUpdate(
+      { _id: id },
+      { $set: updates },
+      {
+        new: true,
+      }
+    );
+  
+    if (!updatedDocument) {
+      throw new Error(`Document with id ${id} not found.`);
+    }
+  
+    return { id: updatedDocument.id.toString() };
+  }
+
   async delete(id: string): Promise<any> {
     await this.model.findByIdAndDelete(id);
     return { success: true };
