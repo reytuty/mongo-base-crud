@@ -4,6 +4,10 @@ export interface IBaseCrud<T> {
   findAll(FilterOffset: Filter): Promise<T[]>;
   save(data: any): Promise<DocumentWithId>;
   update(data: { [key: string]: any; id: string }): Promise<DocumentWithId>;
+  partialUpdate(
+    id: string,
+    updates: Partial<{ [key: string]: any }>
+  ): Promise<DocumentWithId>;
   delete(id: string): Promise<any>;
 }
 

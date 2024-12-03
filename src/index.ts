@@ -70,6 +70,16 @@ class BaseCrud<T> implements IBaseCrud<T> {
     return result;
   }
 
+  async partialUpdate(id: string, data: {
+    [key: string]: any;
+  }): Promise<DocumentWithId> {
+    if (data.hasOwnProperty("updatedAt")) {
+      data.updatedAt = new Date();
+    }
+    const result = await (await this.dbInterface).partialUpdate(id, data);
+    return result;
+  }
+
   async getById(id: string): Promise<T | null> {
     const result = await (await this.dbInterface).getById<T>(id);
     return result;
