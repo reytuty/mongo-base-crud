@@ -55,3 +55,4 @@ export type List<T> = {
   limited: number;
   list: T[];
 };
+

@@ -1,6 +1,6 @@
 {
   "name": "mongo-base-crud",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Class to handler access and handler database",
   "repository": {
     "type": "git",

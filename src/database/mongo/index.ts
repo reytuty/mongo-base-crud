@@ -230,7 +230,7 @@ export class MongoDbAccess implements IDatabase {
         ),
         filterOffset.select
       )
-      .select("-createdAt -updatedAt -__v");
+      .select(" -__v");
     if (filterOffset.orderBy) {
       query.sort({
         [filterOffset.orderBy]: filterOffset.direction
