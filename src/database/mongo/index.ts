@@ -191,7 +191,7 @@ export class MongoDbAccess implements IDatabase {
     searchFields?: string[] | string
   ) {
     if (!filter) {
-      return {};
+      filter = {};
     }
 
     if (filter?.id) {
@@ -201,9 +201,6 @@ export class MongoDbAccess implements IDatabase {
     if (searchFields && search) {
       if (!Array.isArray(searchFields)) {
         searchFields = [searchFields];
-      }
-      if (!filter) {
-        filter = {};
       }
       const searchValue = stringToRegex(search);
       const or: any[] = [];

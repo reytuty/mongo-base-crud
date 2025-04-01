@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import { randomUUID } from "crypto";
 import { faker } from "@faker-js/faker";
 import { MongoDbAccess } from ".";
+import { Filter } from "../IDatabase";
 
 interface DataExample {
   id: string;
@@ -30,15 +31,15 @@ async function wait(time: number) {
 }
 const config = {
   prefixName: "test_",
-  fullUrl: "mongodb://admin:admin@localhost:27017",
+  fullUrl: "mongodb://localhost:27017",
   database: "test",
 };
 const dbAccess = MongoDbAccess.getInstance(
   "test_a",
   "test",
   undefined,
-  9
-  // config
+  9,
+  config
 );
 describe("Mongo", () => {
   it("should add item without pass id and need to create one", async () => {
@@ -89,18 +90,28 @@ describe("Mongo", () => {
     expect(aById?.name).toBe(a.name);
   });
   it("should update partial data using same id", async () => {
-    const a = { 
+    const a = {
       details: {
         name: "Name",
-        age: 18
-      }
-    }
+        age: 18,
+      },
+    };
     const instance = await dbAccess;
-    const {id} =  await instance.insert(a);
+    const { id } = await instance.insert(a);
     const newAge = 19;
     await instance.partialUpdate(id, { details: { age: newAge } });
     const aById = await instance.getById<any>(id);
     expect(aById?.details?.name).toBe(a.details.name);
     expect(aById?.details?.age).toBe(newAge);
+  });
+  it("should find using part of details.name", async () => {
+    const instance = await dbAccess;
+
+    const filter: Filter = {
+      searchValue: "change",
+      searchFields: ["details.name"],
+    };
+    const filterResult = await instance.find<DataExample>(filter);
+    expect(filterResult.total).toBeGreaterThan(0);
   });
 });
