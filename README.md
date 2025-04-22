@@ -179,7 +179,37 @@ Remove um documento por id.
 
 await UserRepository.instance("acme").delete("123");
 
+⸻
 
+🔄 aggregate(filter: object[]): Promise<T[]>
+
+Executa uma operação de agregação no banco de dados com base no pipeline fornecido.
+
+✅ Exemplo: agregação para contar documentos por nome
+
+```typescript
+const filter = [
+  {
+    $group: {
+      _id: "$details.name",
+      count: { $sum: 1 },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      name: "$_id",
+      count: 1,
+    },
+  },
+];
+
+const aggregateResult = await UserRepository.instance("acme").aggregate<{ name: string; count: number }[]>(filter);
+
+console.log("Resultado da agregação:", aggregateResult);
+```
+
+⚠️ Atenção: Certifique-se de que o pipeline de agregação esteja de acordo com a estrutura dos documentos no banco de dados.
 
 ⸻
 
