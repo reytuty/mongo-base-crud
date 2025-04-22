@@ -9,6 +9,7 @@ export interface IBaseCrud<T> {
     updates: Partial<{ [key: string]: any }>
   ): Promise<DocumentWithId>;
   delete(id: string): Promise<any>;
+  aggregate<T>(filter: any): Promise<T>;
 }
 
 export interface IDatabase {
@@ -23,6 +24,7 @@ export interface IDatabase {
     updates: Partial<{ [key: string]: any }>
   ): Promise<DocumentWithId>;
   delete(id: string): Promise<any>;
+  aggregate<T>(filter: any): Promise<T>;
 }
 
 export interface Filter extends FilterNoOffset {
@@ -55,4 +57,3 @@ export type List<T> = {
   limited: number;
   list: T[];
 };
-

@@ -179,6 +179,10 @@ export class MongoDbAccess implements IDatabase {
     }
     return null;
   }
+  async aggregate<T>(pipeline: any[]) {
+    const result = await this.model.aggregate(pipeline).exec();
+    return result as T;
+  }
 
   async getById<T>(id: string): Promise<T | null> {
     const document = await this.model.findById(id).exec();

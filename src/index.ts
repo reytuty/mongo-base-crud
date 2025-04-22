@@ -70,9 +70,12 @@ class BaseCrud<T> implements IBaseCrud<T> {
     return result;
   }
 
-  async partialUpdate(id: string, data: {
-    [key: string]: any;
-  }): Promise<DocumentWithId> {
+  async partialUpdate(
+    id: string,
+    data: {
+      [key: string]: any;
+    }
+  ): Promise<DocumentWithId> {
     if (data.hasOwnProperty("updatedAt")) {
       data.updatedAt = new Date();
     }
@@ -127,6 +130,9 @@ class BaseCrud<T> implements IBaseCrud<T> {
       searchValue,
       searchFields,
     });
+  }
+  async aggregate<T = unknown>(query: any) {
+    return (await this.dbInterface).aggregate<T>(query);
   }
   async delete(id: string) {
     return (await this.dbInterface).delete(id);

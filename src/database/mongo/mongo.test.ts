@@ -114,4 +114,28 @@ describe("Mongo", () => {
     const filterResult = await instance.find<DataExample>(filter);
     expect(filterResult.total).toBeGreaterThan(0);
   });
+  it("should aggregate data", async () => {
+    const instance = await dbAccess;
+    const filter: any = [
+      {
+        $group: {
+          _id: "$details.name",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          count: 1,
+        },
+      },
+    ];
+
+    const aggregateResult = await instance.aggregate<{ count: number }[]>(
+      filter
+    );
+    expect(aggregateResult.length).toBeGreaterThan(0);
+    expect(aggregateResult[0].count).toBeGreaterThan(0);
+  });
 });
