@@ -1,47 +1,58 @@
 # 🧩 mongo-base-crud
 
-**Biblioteca TypeScript para facilitar operações CRUD com MongoDB.**  
-Ideal para projetos whitelabel, com suporte a múltiplos bancos, aliases dinâmicos e padrão Singleton.
+**TypeScript library to simplify CRUD operations with MongoDB.**  
+Ideal for whitelabel projects, with support for multiple databases, dynamic aliases, and Singleton pattern.
 
 ---
 
-## 📦 Instalação
+## 📦 Installation
 
 ```bash
 npm install mongo-base-crud
+```
 
+---
 
+## ⚙️ Configuration
 
-⸻
+Create a `.env` file with the following variables:
 
-⚙️ Configuração
-
-Crie um arquivo .env com:
-
+```env
 MONGO_URL="mongodb://admin:admin@localhost:27017"
 MONGO_DB=test
 MONGO_PREFIX_NAME=test_
+MONGO_DISABLE_PLURAL=true
+```
 
-	•	MONGO_URL: URL de conexão do Mongo
-	•	MONGO_DB: Nome base do banco de dados
-	•	MONGO_PREFIX_NAME: Prefixo usado para projetos multi-tenant ou whitelabel
+- `MONGO_URL`: MongoDB connection URL
+- `MONGO_DB`: Base database name
+- `MONGO_PREFIX_NAME`: Prefix used for multi-tenant or whitelabel projects
+- `MONGO_DISABLE_PLURAL`: *(optional)* if set to `true`, prevents automatic pluralization of collection names
 
-⸻
+📌 **Manual configuration example:** you can override this programmatically by passing `disablePlural: true` in the connection config:
 
-🧠 Sobre getInstance e .instance()
+```ts
+await BaseCrud.getInstance("exact_collection_name", "my_db", {}, 1, {
+  fullUrl: "mongodb://localhost:27017",
+  disablePlural: true,
+});
+```
 
-🔹 BaseCrud.getInstance(...)
+---
 
-Cria ou retorna uma instância Singleton global, útil para casos genéricos e dinâmicos. A chave de instância é composta por dbName_collectionName.
+## 🧠 About `getInstance` and `.instance()`
 
-🔸 .instance(alias: string)
+🔹 `BaseCrud.getInstance(...)`  
+Creates or returns a global Singleton instance. Useful for dynamic or generic cases. The instance key is based on `dbName_collectionName`.
 
-Método recomendado para criar repositórios reutilizáveis com nomes únicos, ideal em projetos whitelabel. Internamente usa getInstance com chaves personalizadas por alias.
+🔸 `.instance(alias: string)`  
+Recommended method to create reusable repositories with unique names, ideal for whitelabel projects. Internally uses `getInstance` with a custom key based on the alias.
 
-⸻
+---
 
-🧪 Exemplo com .instance()
+## 🧪 Example with `.instance()`
 
+```ts
 import { Singleton } from "typescript-singleton";
 import { BaseCrud } from "mongo-base-crud";
 
@@ -54,7 +65,7 @@ export class UserRepository extends BaseCrud<User> {
   public static instance(clinicAlias: string): UserRepository {
     const dbName = `clinic_${clinicAlias}`;
     return Singleton.getInstance<UserRepository>(
-      `UserRepo_${clinicAlias}`, // chave única da instância
+      `UserRepo_${clinicAlias}`, // unique instance key
       UserRepository,
       "users",
       dbName,
@@ -66,196 +77,126 @@ export class UserRepository extends BaseCrud<User> {
     super(collection, dbName, indexes);
   }
 }
-
-
-
-⸻
-
-📚 Métodos Disponíveis
-
-🧩 save(data: object): Promise<DocumentWithId>
-
-Salva um novo documento no banco de dados. O método também funciona como upsert, ou seja:
-	•	Se o id não for enviado, será gerado automaticamente.
-	•	Se o id for enviado, o documento será substituído completamente caso já exista ou será criado com esse id.
-
-⚠️ Atenção: O save não faz merge dos dados existentes — ele sobrescreve totalmente o documento anterior se o id existir.
-
-✅ Exemplo 1: salvar um novo documento sem id (geração automática)
-
-const saveResult: { id: string } = await UserRepository.instance("acme").save({
-  name: "João"
-});
-
-console.log("Novo documento criado com ID:", saveResult.id);
-
-✅ Exemplo 2: salvar com id customizado (comportamento upsert)
-
-await UserRepository.instance("acme").save({
-  id: "my-custom-id",
-  name: "Maria"
-});
-
-
-
-⸻
-
-✏️ update(data: { id: string, ... }): Promise<DocumentWithId>
-
-Atualiza completamente um documento com base no id.
-
-await UserRepository.instance("acme").update({
-  id: "123",
-  name: "Atualizado"
-});
-
-
-
-⸻
-
-🧩 partialUpdate(id: string, data: object): Promise<DocumentWithId>
-
-Atualiza parcialmente os campos de um documento sem sobrescrever os demais.
-
-await UserRepository.instance("acme").partialUpdate("123", {
-  name: "Parcial"
-});
-
-
-
-⸻
-
-🔍 find(filter?, select?, skip?, limit?, orderBy?, direction?, searchValue?, searchFields?): Promise<List<T>>
-
-Busca com suporte a:
-	•	Filtros exatos
-	•	Paginação
-	•	Ordenação
-	•	Busca textual com múltiplos campos
-
-await UserRepository.instance("acme").find(
-  { active: true },
-  { id: true, name: true },
-  0,
-  10,
-  "name",
-  "asc",
-  "jo",
-  ["name"]
-);
-
-
-
-⸻
-
-📋 findAll(filter?, select?, orderBy?, direction?, searchValue?, searchFields?): Promise<T[]>
-
-Versão sem paginação do find.
-
-await UserRepository.instance("acme").findAll(
-  { active: true },
-  { name: true },
-  "name",
-  "asc"
-);
-
-
-
-⸻
-
-🔍 getById(id: string): Promise<T | null>
-
-Busca um único documento por id.
-
-const user = await UserRepository.instance("acme").getById("123");
-
-
-
-⸻
-
-❌ delete(id: string): Promise<boolean>
-
-Remove um documento por id.
-
-await UserRepository.instance("acme").delete("123");
-
-⸻
-
-🔄 aggregate(filter: object[]): Promise<T[]>
-
-Executa uma operação de agregação no banco de dados com base no pipeline fornecido.
-
-✅ Exemplo: agregação para contar documentos por nome
-
-```typescript
-const filter = [
-  {
-    $group: {
-      _id: "$details.name",
-      count: { $sum: 1 },
-    },
-  },
-  {
-    $project: {
-      _id: 0,
-      name: "$_id",
-      count: 1,
-    },
-  },
-];
-
-const aggregateResult = await UserRepository.instance("acme").aggregate<{ name: string; count: number }[]>(filter);
-
-console.log("Resultado da agregação:", aggregateResult);
 ```
 
-⚠️ Atenção: Certifique-se de que o pipeline de agregação esteja de acordo com a estrutura dos documentos no banco de dados.
+---
 
-⸻
+## 📚 Available Methods
 
-🏗️ BaseCrud.getInstance(...)
+### 🧩 `save(data: object): Promise<DocumentWithId>`
 
-Uso genérico de um repositório:
+Creates or completely replaces a document. If `id` is present, acts as an upsert.
 
+#### ✅ Example 1
+
+```ts
+const saveResult = await UserRepository.instance("acme").save({
+  name: "John"
+});
+```
+
+#### ✅ Example 2
+
+```ts
+await UserRepository.instance("acme").save({
+  id: "my-custom-id",
+  name: "Mary"
+});
+```
+
+---
+
+### ✏️ `update(data: { id: string, ... }): Promise<DocumentWithId>`
+
+Fully updates a document based on the provided `id`.
+
+---
+
+### 🧩 `partialUpdate(id: string, data: object): Promise<DocumentWithId>`
+
+Partially updates only the provided fields of a document.
+
+---
+
+### 🔍 `find(filter?, select?, skip?, limit?, orderBy?, direction?, searchValue?, searchFields?): Promise<List<T>>`
+
+Performs a filtered, paginated search with optional sorting and text search on multiple fields.
+
+---
+
+### 📋 `findAll(filter?, select?, orderBy?, direction?, searchValue?, searchFields?): Promise<T[]>`
+
+Same as `find`, but returns all results without pagination.
+
+---
+
+### 🔍 `getById(id: string): Promise<T | null>`
+
+Retrieves a document by its ID.
+
+---
+
+### ❌ `delete(id: string): Promise<boolean>`
+
+Deletes a document by its ID.
+
+---
+
+### 🔄 `aggregate(pipeline: object[]): Promise<T[]>`
+
+Executes an aggregation pipeline.  
+**Example:**
+
+```ts
+const result = await UserRepository.instance("acme").aggregate([
+  { $group: { _id: "$details.name", count: { $sum: 1 } } },
+  { $project: { _id: 0, name: "$_id", count: 1 } }
+]);
+```
+
+---
+
+## 🏗️ Generic Usage with `getInstance(...)`
+
+```ts
 const crud = BaseCrud.getInstance<{ id: string; name: string }>(
   "users",
   "clinic_acme",
   { name: 1 }
 );
 
-await crud.save({ name: "Exemplo" });
+await crud.save({ name: "Example" });
+```
 
+---
 
+## 📌 Requirements
 
-⸻
+- Node.js >= 14
+- MongoDB >= 4.x
+- TypeScript
 
-📌 Requisitos
-	•	Node.js >= 14
-	•	MongoDB >= 4.x
-	•	TypeScript
+---
 
-⸻
+## ✅ Tests
 
-✅ Testes
+Example using [Vitest](https://vitest.dev):
 
-Consulte os testes com Vitest no diretório /test.
-
-it("deve salvar um novo documento", async () => {
-  const result = await UserRepository.instance("acme").save({ name: "Teste" });
+```ts
+it("should save a new document", async () => {
+  const result = await UserRepository.instance("acme").save({ name: "Test" });
   expect(result.id).toBeDefined();
 });
+```
 
+---
 
+## 🤝 Contributing
 
-⸻
+Pull requests are welcome! Suggestions, usage examples, and improvements are greatly appreciated.
 
-🤝 Contribuindo
+---
 
-Pull Requests são bem-vindos. Sugestões, exemplos de uso e melhorias são muito apreciadas.
-
-⸻
-
-📝 Licença
+## 📝 License
 
 Apache-2.0 © IDress : Renato Miawaki
-

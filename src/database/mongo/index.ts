@@ -23,12 +23,16 @@ export type MongoConfig = {
   prefixName?: string;
   fullUrl: string;
   database?: string;
+  disablePlural?: boolean;
 };
 function getDefaultMongoConfig(): MongoConfig {
   return {
     prefixName: process.env.MONGO_PREFIX_NAME || "dev_",
     fullUrl: process.env.MONGO_URL || "mongodb://localhost:27017",
     database: process.env.MONGO_DB || "db",
+    disablePlural: process.env.MONGO_DISABLE_PLURAL
+      ? !!process.env.MONGO_DISABLE_PLURAL
+      : false,
   };
 }
 async function getMongoConnection(
@@ -110,10 +114,14 @@ export class MongoDbAccess implements IDatabase {
         await getMongoConnection(configOrDefault, databaseName);
       const keyCollection: string = `${connectionString}.${dbName}.${collectionName}`;
       if (!MongoDbAccess.models.has(keyCollection)) {
-        connectedMongoose.model(
+        const schema: Schema = this.getCollectionInfoOrDefault(
           collectionName,
-          this.getCollectionInfoOrDefault(collectionName, indexes)
+          indexes
         );
+        if (configOrDefault.disablePlural) {
+          schema.set("collection", collectionName);
+        }
+        connectedMongoose.model(collectionName, schema);
 
         MongoDbAccess.models.set(
           keyCollection,
