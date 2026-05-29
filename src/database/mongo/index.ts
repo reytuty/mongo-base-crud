@@ -31,13 +31,13 @@ function getDefaultMongoConfig(): MongoConfig {
     fullUrl: process.env.MONGO_URL || "mongodb://localhost:27017",
     database: process.env.MONGO_DB || "db",
     disablePlural: process.env.MONGO_DISABLE_PLURAL
-      ? !!process.env.MONGO_DISABLE_PLURAL
+      ? process.env.MONGO_DISABLE_PLURAL === "true"
       : false,
   };
 }
 async function getMongoConnection(
   config: MongoConfig | undefined,
-  customDbName?: string
+  customDbName?: string,
 ): Promise<Connection> {
   const configOrDefault: MongoConfig = config || getDefaultMongoConfig();
   const prefixName: string = config?.prefixName || "";
@@ -50,7 +50,7 @@ async function getMongoConnection(
       configOrDefault.fullUrl,
       {
         dbName,
-      }
+      },
     );
     mongoConnections.set(connectionString, connection);
   }
@@ -68,7 +68,7 @@ export class MongoDbAccess implements IDatabase {
 
   protected static getCollectionInfoOrDefault(
     collectionName: string,
-    indexes: any = {}
+    indexes: any = {},
   ): Schema {
     const key: string = `${collectionName}`;
 
@@ -86,7 +86,7 @@ export class MongoDbAccess implements IDatabase {
         strict: false,
         collation: { locale: "pt", strength: 1 },
         timestamps: true,
-      }
+      },
     );
     flexibleSchema.index({ id: 1, ...indexes });
 
@@ -98,14 +98,14 @@ export class MongoDbAccess implements IDatabase {
     databaseName?: string,
     indexes: any = {},
     connectionTryingTimes: number = 1,
-    defaultConfig?: MongoConfig
+    defaultConfig?: MongoConfig,
   ): Promise<MongoDbAccess> {
     const configOrDefault: MongoConfig =
       defaultConfig || getDefaultMongoConfig();
     let dbName: string = databaseName || configOrDefault.database || "db";
     if (!configOrDefault.fullUrl) {
       throw new Error(
-        "MongoDB host is required or fullUrl is required. Check your env.MONGO_URL"
+        "MongoDB host is required or fullUrl is required. Check your env.MONGO_URL",
       );
     }
     const connectionString = md5(JSON.stringify(configOrDefault));
@@ -116,7 +116,7 @@ export class MongoDbAccess implements IDatabase {
       if (!MongoDbAccess.models.has(keyCollection)) {
         const schema: Schema = this.getCollectionInfoOrDefault(
           collectionName,
-          indexes
+          indexes,
         );
         if (configOrDefault.disablePlural) {
           schema.set("collection", collectionName);
@@ -125,7 +125,7 @@ export class MongoDbAccess implements IDatabase {
 
         MongoDbAccess.models.set(
           keyCollection,
-          connectedMongoose.model(collectionName)
+          connectedMongoose.model(collectionName),
         );
       }
 
@@ -135,7 +135,7 @@ export class MongoDbAccess implements IDatabase {
         configOrDefault,
         collectionName,
         connectedMongoose,
-        MongoDbAccess.models.get(keyCollection)
+        MongoDbAccess.models.get(keyCollection),
       );
     } catch (e: any) {
       if (connectionTryingTimes > 10) {
@@ -151,7 +151,7 @@ export class MongoDbAccess implements IDatabase {
         databaseName,
         indexes,
         connectionTryingTimes + 1,
-        defaultConfig
+        defaultConfig,
       );
     }
   }
@@ -164,7 +164,7 @@ export class MongoDbAccess implements IDatabase {
     public config: any,
     collectionName: string,
     mongo: Connection,
-    _model: any
+    _model: any,
   ) {
     this.mongoose = mongo;
 
@@ -187,8 +187,8 @@ export class MongoDbAccess implements IDatabase {
     }
     return null;
   }
-  async aggregate<T>(pipeline: any[]) {
-    const result = await this.model.aggregate(pipeline).exec();
+  async aggregate<T>(pipeline: any[], options: any = { allowDiskUse: true }) {
+    const result = await this.model.aggregate(pipeline, options).exec();
     return result as T;
   }
 
@@ -200,7 +200,7 @@ export class MongoDbAccess implements IDatabase {
   private handleFilter(
     filter: FilterObject | undefined,
     search?: string,
-    searchFields?: string[] | string
+    searchFields?: string[] | string,
   ) {
     if (!filter) {
       filter = {};
@@ -235,9 +235,9 @@ export class MongoDbAccess implements IDatabase {
         this.handleFilter(
           filterOffset.filter,
           filterOffset.searchValue,
-          filterOffset.searchFields
+          filterOffset.searchFields,
         ),
-        filterOffset.select
+        filterOffset.select,
       )
       .select(" -__v");
     if (filterOffset.orderBy) {
@@ -262,9 +262,9 @@ export class MongoDbAccess implements IDatabase {
       this.handleFilter(
         filterOffset.filter,
         filterOffset.searchValue,
-        filterOffset.searchFields
+        filterOffset.searchFields,
       ),
-      filterOffset.select
+      filterOffset.select,
     );
     if (filterOffset.orderBy) {
       query.sort({
@@ -279,7 +279,7 @@ export class MongoDbAccess implements IDatabase {
     let preparedFilter = this.handleFilter(
       filterOffset.filter,
       filterOffset.searchValue,
-      filterOffset.searchFields
+      filterOffset.searchFields,
     );
     const count = await this.model.countDocuments(preparedFilter);
     const result = await query.exec();
@@ -319,14 +319,14 @@ export class MongoDbAccess implements IDatabase {
       {
         upsert: true,
         new: true,
-      }
+      },
     );
     return { id: updatedDocument?.id.toString() };
   }
 
   async partialUpdate(
     id: string,
-    updates: Partial<{ [key: string]: any }>
+    updates: Partial<{ [key: string]: any }>,
   ): Promise<DocumentWithId> {
     return this.update({ id, ...transformDataToUpdate(updates) });
   }
