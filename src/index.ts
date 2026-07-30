@@ -13,7 +13,7 @@ class BaseCrud<T> implements IBaseCrud<T> {
     dbName?: string,
     indexes: any = {},
     connectionTryingTimes = 1,
-    defaultConfig?: MongoConfig
+    defaultConfig?: MongoConfig,
   ): BaseCrud<T> {
     return Singleton.getInstance<BaseCrud<T>>(
       `${dbName}_${collectionName}`,
@@ -22,7 +22,7 @@ class BaseCrud<T> implements IBaseCrud<T> {
       dbName,
       indexes,
       connectionTryingTimes,
-      defaultConfig
+      defaultConfig,
     );
   }
 
@@ -31,7 +31,7 @@ class BaseCrud<T> implements IBaseCrud<T> {
     protected dbName: string,
     indexes: any = {},
     connectionTryingTimes = 1,
-    defaultConfig?: MongoConfig
+    defaultConfig?: MongoConfig,
   ) {
     if (!this.collectionName) {
       throw new Error("Collection name is required");
@@ -44,7 +44,7 @@ class BaseCrud<T> implements IBaseCrud<T> {
       this.dbName,
       indexes,
       connectionTryingTimes,
-      defaultConfig
+      defaultConfig,
     );
   }
 
@@ -74,7 +74,7 @@ class BaseCrud<T> implements IBaseCrud<T> {
     id: string,
     data: {
       [key: string]: any;
-    }
+    },
   ): Promise<DocumentWithId> {
     if (data.hasOwnProperty("updatedAt")) {
       data.updatedAt = new Date();
@@ -96,7 +96,7 @@ class BaseCrud<T> implements IBaseCrud<T> {
     orderBy?: string,
     direction?: string,
     searchValue?: string,
-    searchFields?: string[] | string
+    searchFields?: string[] | string,
   ): Promise<List<T>> {
     const result = await (
       await this.dbInterface
@@ -120,7 +120,7 @@ class BaseCrud<T> implements IBaseCrud<T> {
     orderBy?: string,
     direction?: string,
     searchValue?: string,
-    searchFields?: string[] | string
+    searchFields?: string[] | string,
   ) {
     return (await this.dbInterface).findAll<T>({
       filter,
@@ -131,8 +131,14 @@ class BaseCrud<T> implements IBaseCrud<T> {
       searchFields,
     });
   }
-  async aggregate<T = unknown>(query: any) {
-    return (await this.dbInterface).aggregate<T>(query);
+  async aggregate<T = unknown>(
+    query: any,
+    options: any = { allowDiskUse: true },
+  ) {
+    return (await this.dbInterface).aggregate<T>(
+      query,
+      options ?? { allowDiskUse: true },
+    );
   }
   async delete(id: string) {
     return (await this.dbInterface).delete(id);

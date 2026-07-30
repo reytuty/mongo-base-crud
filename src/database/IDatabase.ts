@@ -6,10 +6,10 @@ export interface IBaseCrud<T> {
   update(data: { [key: string]: any; id: string }): Promise<DocumentWithId>;
   partialUpdate(
     id: string,
-    updates: Partial<{ [key: string]: any }>
+    updates: Partial<{ [key: string]: any }>,
   ): Promise<DocumentWithId>;
   delete(id: string): Promise<any>;
-  aggregate<T>(filter: any): Promise<T>;
+  aggregate<T>(filter: any, options?: any): Promise<T>;
 }
 
 export interface IDatabase {
@@ -21,10 +21,10 @@ export interface IDatabase {
   update(data: { [key: string]: any; id: string }): Promise<DocumentWithId>;
   partialUpdate(
     id: string,
-    updates: Partial<{ [key: string]: any }>
+    updates: Partial<{ [key: string]: any }>,
   ): Promise<DocumentWithId>;
   delete(id: string): Promise<any>;
-  aggregate<T>(filter: any): Promise<T>;
+  aggregate<T>(filter: any, options?: any): Promise<T>;
 }
 
 export interface Filter extends FilterNoOffset {

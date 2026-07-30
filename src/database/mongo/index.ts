@@ -247,6 +247,7 @@ export class MongoDbAccess implements IDatabase {
           : "asc",
       });
     }
+    query.allowDiskUse(true);
     const result = await query.exec();
 
     return result.map(this.formatDoc) as T[];
@@ -273,6 +274,7 @@ export class MongoDbAccess implements IDatabase {
           : "asc",
       });
     }
+    query.allowDiskUse(true);
     if (filterOffset.offset) {
       query.skip(skip).limit(limit);
     }
