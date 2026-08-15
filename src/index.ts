@@ -143,6 +143,37 @@ class BaseCrud<T> implements IBaseCrud<T> {
   async delete(id: string) {
     return (await this.dbInterface).delete(id);
   }
+
+  async saveMany(
+    data: { [key: string]: any; id?: string }[],
+  ): Promise<DocumentWithId[]> {
+    const prepared = (data || []).map((item) => {
+      if (item.hasOwnProperty("updatedAt")) {
+        item.updatedAt = new Date();
+      }
+      if (item.hasOwnProperty("createdAt") && !item["createdAt"]) {
+        item.createdAt = new Date();
+      }
+      return item;
+    });
+    return (await this.dbInterface).insertMany(prepared);
+  }
+
+  async updateMany(
+    data: { [key: string]: any; id: string }[],
+  ): Promise<DocumentWithId[]> {
+    const prepared = (data || []).map((item) => {
+      if (item.hasOwnProperty("updatedAt")) {
+        item.updatedAt = new Date();
+      }
+      return item;
+    });
+    return (await this.dbInterface).updateMany(prepared);
+  }
+
+  async deleteMany(ids: string[]): Promise<void> {
+    return (await this.dbInterface).deleteMany(ids);
+  }
 }
 
 export { BaseCrud, DocumentWithId, IDatabase, List };

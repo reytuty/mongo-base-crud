@@ -337,4 +337,56 @@ export class MongoDbAccess implements IDatabase {
     await this.model.findByIdAndDelete(id);
     return { success: true };
   }
+
+  async insertMany(
+    data: { [key: string]: any; id?: string }[],
+  ): Promise<DocumentWithId[]> {
+    if (!data?.length) {
+      return [];
+    }
+
+    const prepared = data.map(({ id, ...rest }) => {
+      const _id = id || randomUUID();
+      return { _id, doc: { ...rest, _id } };
+    });
+
+    const operations = prepared.map(({ _id, doc }) => ({
+      updateOne: {
+        filter: { _id },
+        update: { $set: doc },
+        upsert: true,
+      },
+    }));
+
+    await this.model.bulkWrite(operations, { ordered: false });
+
+    return prepared.map(({ _id }) => ({ id: _id.toString() }));
+  }
+
+  async updateMany(
+    data: { [key: string]: any; id: string }[],
+  ): Promise<DocumentWithId[]> {
+    if (!data?.length) {
+      return [];
+    }
+
+    const operations = data.map(({ id, ...rest }) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { $set: { ...rest, _id: id } },
+        upsert: true,
+      },
+    }));
+
+    await this.model.bulkWrite(operations, { ordered: false });
+
+    return data.map(({ id }) => ({ id: id.toString() }));
+  }
+
+  async deleteMany(ids: string[]): Promise<void> {
+    if (!ids?.length) {
+      return;
+    }
+    await this.model.deleteMany({ _id: { $in: ids } });
+  }
 }

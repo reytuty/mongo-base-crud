@@ -1,7 +1,21 @@
 # 🧩 mongo-base-crud
 
-**TypeScript library to simplify CRUD operations with MongoDB.**  
-Ideal for whitelabel projects, with support for multiple databases, dynamic aliases, and Singleton pattern.
+**TypeScript library to simplify CRUD operations with MongoDB.**
+
+Built on top of [Mongoose](https://mongoosejs.com/), designed for whitelabel/multi-tenant projects, with support for multiple databases, dynamic aliases, and the Singleton pattern.
+
+---
+
+## ✨ Features
+
+- 🔌 Simple Mongo connection with connection pooling (per-database Singleton)
+- 🧬 Flexible schema (no strict typing at the DB layer) with automatic `_id ↔ id` mapping
+- 🏢 Multi-tenant / whitelabel friendly (prefixes, per-alias databases)
+- 🔁 Full CRUD: `save`, `update`, `partialUpdate`, `find`, `findAll`, `getById`, `delete`
+- 📦 **Batch operations**: `saveMany`, `updateMany`, `deleteMany` (single-roundtrip `bulkWrite`)
+- 🧮 `aggregate` helper with `allowDiskUse: true` by default
+- 🚀 `find` / `findAll` also run with `allowDiskUse: true` by default (no more sort-memory errors on large datasets)
+- 🧠 Automatic `createdAt` / `updatedAt` handling when those fields exist in your payload
 
 ---
 
@@ -15,7 +29,7 @@ npm install mongo-base-crud
 
 ## ⚙️ Configuration
 
-Create a `.env` file with the following variables:
+Create a `.env` file:
 
 ```env
 MONGO_URL="mongodb://admin:admin@localhost:27017"
@@ -24,12 +38,16 @@ MONGO_PREFIX_NAME=test_
 MONGO_DISABLE_PLURAL=true
 ```
 
-- `MONGO_URL`: MongoDB connection URL
-- `MONGO_DB`: Base database name
-- `MONGO_PREFIX_NAME`: Prefix used for multi-tenant or whitelabel projects
-- `MONGO_DISABLE_PLURAL`: *(optional)* if set to `true`, prevents automatic pluralization of collection names
+| Variable | Description |
+|---|---|
+| `MONGO_URL` | MongoDB connection URL |
+| `MONGO_DB` | Base database name |
+| `MONGO_PREFIX_NAME` | Prefix for multi-tenant / whitelabel setups |
+| `MONGO_DISABLE_PLURAL` | *(optional)* if `true`, disables Mongoose's automatic pluralization of collection names |
 
-📌 **Manual configuration example:** you can override this programmatically by passing `disablePlural: true` in the connection config:
+### Overriding config programmatically
+
+You can bypass the env vars by passing a `MongoConfig` directly:
 
 ```ts
 await BaseCrud.getInstance("exact_collection_name", "my_db", {}, 1, {
@@ -40,17 +58,35 @@ await BaseCrud.getInstance("exact_collection_name", "my_db", {}, 1, {
 
 ---
 
-## 🧠 About `getInstance` and `.instance()`
+## 🧠 `getInstance` vs `.instance()`
 
-🔹 `BaseCrud.getInstance(...)`  
-Creates or returns a global Singleton instance. Useful for dynamic or generic cases. The instance key is based on `dbName_collectionName`.
+| Method | When to use |
+|---|---|
+| `BaseCrud.getInstance(...)` | Quick / generic usage. Returns a global Singleton keyed by `dbName_collectionName`. |
+| `YourRepository.instance(alias)` | Recommended for whitelabel setups. Creates one Singleton per alias, using a custom key (e.g. `UserRepo_acme`). |
 
-🔸 `.instance(alias: string)`  
-Recommended method to create reusable repositories with unique names, ideal for whitelabel projects. Internally uses `getInstance` with a custom key based on the alias.
+Both are backed by [`typescript-singleton`](https://www.npmjs.com/package/typescript-singleton), so repeated calls return the same instance and reuse the same Mongo connection.
 
 ---
 
-## 🧪 Example with `.instance()`
+## 🚀 Quick Start
+
+### Generic usage
+
+```ts
+import { BaseCrud } from "mongo-base-crud";
+
+const users = BaseCrud.getInstance<{ id: string; name: string }>(
+  "users",
+  "clinic_acme",
+  { name: 1 }, // indexes
+);
+
+const { id } = await users.save({ name: "John" });
+const john = await users.getById(id);
+```
+
+### Recommended: extend `BaseCrud` per entity
 
 ```ts
 import { Singleton } from "typescript-singleton";
@@ -65,11 +101,11 @@ export class UserRepository extends BaseCrud<User> {
   public static instance(clinicAlias: string): UserRepository {
     const dbName = `clinic_${clinicAlias}`;
     return Singleton.getInstance<UserRepository>(
-      `UserRepo_${clinicAlias}`, // unique instance key
+      `UserRepo_${clinicAlias}`,
       UserRepository,
       "users",
       dbName,
-      { name: 1 } // indexes
+      { name: 1 },
     );
   }
 
@@ -77,95 +113,149 @@ export class UserRepository extends BaseCrud<User> {
     super(collection, dbName, indexes);
   }
 }
+
+// usage
+const repo = UserRepository.instance("acme");
+await repo.save({ name: "Mary" });
 ```
 
 ---
 
-## 📚 Available Methods
+## 📚 API Reference
 
-### 🧩 `save(data: object): Promise<DocumentWithId>`
+All methods below are exposed on any `BaseCrud<T>` instance.
 
-Creates or completely replaces a document. If `id` is present, acts as an upsert.
+### Single-document operations
 
-#### ✅ Example 1
+#### `save(data): Promise<DocumentWithId>`
+
+Creates a new document, or replaces an existing one when `id` is provided (upsert).
+Automatically refreshes `updatedAt` / `createdAt` if those fields exist on the payload.
 
 ```ts
-const saveResult = await UserRepository.instance("acme").save({
-  name: "John"
-});
+await repo.save({ name: "John" });                    // insert with generated UUID
+await repo.save({ id: "my-custom-id", name: "Mary" }); // upsert with custom id
 ```
 
-#### ✅ Example 2
+#### `update(data): Promise<DocumentWithId>`
+
+Fully replaces the document matched by `data.id`. Refreshes `updatedAt` when present.
 
 ```ts
-await UserRepository.instance("acme").save({
-  id: "my-custom-id",
-  name: "Mary"
-});
+await repo.update({ id: "abc", name: "New Name" });
+```
+
+#### `partialUpdate(id, data): Promise<DocumentWithId>`
+
+Updates only the provided fields (uses dot-notation under the hood).
+
+```ts
+await repo.partialUpdate("abc", { name: "New Name" });
+```
+
+#### `getById(id): Promise<T | null>`
+
+Retrieves a single document by its `id`.
+
+#### `delete(id): Promise<{ success: true }>`
+
+Deletes a document by its `id`.
+
+---
+
+### Batch operations
+
+All batch methods use MongoDB's `bulkWrite` with `ordered: false` — a single roundtrip that keeps going even if individual documents fail.
+
+#### `saveMany(data): Promise<DocumentWithId[]>`
+
+Upserts an array of documents. Items with `id` are updated; items without get a generated UUID.
+Also refreshes `updatedAt` / `createdAt` per item, just like `save`.
+
+```ts
+const results = await repo.saveMany([
+  { name: "Alice" },                    // new
+  { id: "existing-id", name: "Bob" },   // upsert
+]);
+// results: [{ id: "..." }, { id: "existing-id" }]
+```
+
+#### `updateMany(data): Promise<DocumentWithId[]>`
+
+Fully updates (upserts) each document by its `id`.
+
+```ts
+await repo.updateMany([
+  { id: "a", name: "Alice v2" },
+  { id: "b", name: "Bob v2" },
+]);
+```
+
+#### `deleteMany(ids): Promise<void>`
+
+Deletes all documents whose `id` is in the provided list.
+
+```ts
+await repo.deleteMany(["a", "b", "c"]);
 ```
 
 ---
 
-### ✏️ `update(data: { id: string, ... }): Promise<DocumentWithId>`
+### Querying
 
-Fully updates a document based on the provided `id`.
+#### `find(filter?, select?, skip?, limit?, orderBy?, direction?, searchValue?, searchFields?): Promise<List<T>>`
 
----
-
-### 🧩 `partialUpdate(id: string, data: object): Promise<DocumentWithId>`
-
-Partially updates only the provided fields of a document.
-
----
-
-### 🔍 `find(filter?, select?, skip?, limit?, orderBy?, direction?, searchValue?, searchFields?): Promise<List<T>>`
-
-Performs a filtered, paginated search with optional sorting and text search on multiple fields.
-
----
-
-### 📋 `findAll(filter?, select?, orderBy?, direction?, searchValue?, searchFields?): Promise<T[]>`
-
-Same as `find`, but returns all results without pagination.
-
----
-
-### 🔍 `getById(id: string): Promise<T | null>`
-
-Retrieves a document by its ID.
-
----
-
-### ❌ `delete(id: string): Promise<boolean>`
-
-Deletes a document by its ID.
-
----
-
-### 🔄 `aggregate(pipeline: object[]): Promise<T[]>`
-
-Executes an aggregation pipeline.  
-**Example:**
+Filtered, paginated search with optional sorting and multi-field text search.
+Runs with `allowDiskUse: true` by default to avoid the 100MB sort memory limit.
 
 ```ts
-const result = await UserRepository.instance("acme").aggregate([
+const page = await repo.find(
+  { active: true },   // filter
+  { name: 1 },        // select (projection)
+  0,                  // skip
+  20,                 // limit
+  "name",             // orderBy
+  "asc",              // direction
+  "jo",               // searchValue
+  ["name", "email"],  // searchFields
+);
+// page: { total, skipped, limited, list: T[] }
+```
+
+#### `findAll(filter?, select?, orderBy?, direction?, searchValue?, searchFields?): Promise<T[]>`
+
+Same as `find`, but returns every match with no pagination. Also uses `allowDiskUse: true`.
+
+---
+
+### Aggregation
+
+#### `aggregate(pipeline, options?): Promise<T>`
+
+Runs an aggregation pipeline. `options` defaults to `{ allowDiskUse: true }`.
+
+```ts
+const result = await repo.aggregate([
   { $group: { _id: "$details.name", count: { $sum: 1 } } },
-  { $project: { _id: 0, name: "$_id", count: 1 } }
+  { $project: { _id: 0, name: "$_id", count: 1 } },
 ]);
 ```
 
 ---
 
-## 🏗️ Generic Usage with `getInstance(...)`
+## 📐 Types
 
 ```ts
-const crud = BaseCrud.getInstance<{ id: string; name: string }>(
-  "users",
-  "clinic_acme",
-  { name: 1 }
-);
+type DocumentWithId = { id: string };
 
-await crud.save({ name: "Example" });
+type Offset = { skip: number; limit: number };
+
+type List<T> = {
+  total: number;
+  skipped: number;
+  limited: number;
+  list: T[];
+};
 ```
 
 ---
@@ -174,19 +264,38 @@ await crud.save({ name: "Example" });
 
 - Node.js >= 14
 - MongoDB >= 4.x
-- TypeScript
+- TypeScript >= 5.x
 
 ---
 
-## ✅ Tests
+## ✅ Testing
 
-Example using [Vitest](https://vitest.dev):
+Example with [Vitest](https://vitest.dev):
 
 ```ts
-it("should save a new document", async () => {
-  const result = await UserRepository.instance("acme").save({ name: "Test" });
-  expect(result.id).toBeDefined();
+import { describe, it, expect } from "vitest";
+import { UserRepository } from "./UserRepository";
+
+describe("UserRepository", () => {
+  it("should save a new document", async () => {
+    const result = await UserRepository.instance("acme").save({ name: "Test" });
+    expect(result.id).toBeDefined();
+  });
+
+  it("should save many documents in one roundtrip", async () => {
+    const results = await UserRepository.instance("acme").saveMany([
+      { name: "A" },
+      { name: "B" },
+    ]);
+    expect(results).toHaveLength(2);
+  });
 });
+```
+
+Run:
+
+```bash
+npm test
 ```
 
 ---
@@ -199,4 +308,4 @@ Pull requests are welcome! Suggestions, usage examples, and improvements are gre
 
 ## 📝 License
 
-Apache-2.0 © IDress : Renato Miawaki
+Apache-2.0 © IDress — Renato Miawaki

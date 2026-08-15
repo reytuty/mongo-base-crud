@@ -9,6 +9,13 @@ export interface IBaseCrud<T> {
     updates: Partial<{ [key: string]: any }>,
   ): Promise<DocumentWithId>;
   delete(id: string): Promise<any>;
+  saveMany(
+    data: { [key: string]: any; id?: string }[],
+  ): Promise<DocumentWithId[]>;
+  updateMany(
+    data: { [key: string]: any; id: string }[],
+  ): Promise<DocumentWithId[]>;
+  deleteMany(ids: string[]): Promise<void>;
   aggregate<T>(filter: any, options?: any): Promise<T>;
 }
 
@@ -24,6 +31,13 @@ export interface IDatabase {
     updates: Partial<{ [key: string]: any }>,
   ): Promise<DocumentWithId>;
   delete(id: string): Promise<any>;
+  insertMany(
+    data: { [key: string]: any; id?: string }[],
+  ): Promise<DocumentWithId[]>;
+  updateMany(
+    data: { [key: string]: any; id: string }[],
+  ): Promise<DocumentWithId[]>;
+  deleteMany(ids: string[]): Promise<void>;
   aggregate<T>(filter: any, options?: any): Promise<T>;
 }
 
