@@ -1,6 +1,6 @@
 {
   "name": "mongo-base-crud",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Class to handler access and handler database",
   "repository": {
     "type": "git",
@@ -9,8 +9,7 @@
   "scripts": {
     "prepublish": "rm -rf dist/ && npm run build",
     "build": "tsc",
-    "test": "vitest",
-    "ttest": "vitest --config vitest.config.ts --tsconfig tsconfig.test.json"
+    "test": "vitest"
   },
   "keywords": [
     "mongo",
